@@ -133,3 +133,23 @@ python main.py
 8: Afficher historique mouvement
 9: Stock faible
 
+J'ai creer un triggers dans la base de donne dans le terminal pour gerer le mouvement quand on insert un mouvement sa met automatiquement a jour la quantite produit par entree ou sortie
+CREATE TRIGGER apres_insert_mouvement
+    -> AFTER INSERT ON mouvement
+    -> FOR EACH ROW
+    -> BEGIN
+    ->     IF NEW.type_mouvement = 'ENTREE' THEN
+    ->         UPDATE produits
+    ->         SET quantite = quantite + NEW.quantite_mouv
+    ->         WHERE id_produit = NEW.id_produit;
+    -> 
+    ->     ELSEIF NEW.type_mouvement = 'SORTIE' THEN
+    ->         UPDATE produits
+    ->         SET quantite = quantite - NEW.quantite_mouv
+    ->         WHERE id_produit = NEW.id_produit;
+    -> 
+    ->     END IF;
+    -> END$$
+
+
+
