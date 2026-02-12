@@ -10,6 +10,7 @@ connection = mysql.connector.connect(
 if connection.is_connected():
     print("Base de donnee connecter")
 
+#===========================MENU=======================================================
 
 def menu():
     print("======================MENU======================")
@@ -24,6 +25,8 @@ def menu():
     print("9: Stock faible")
     print("=================================================")
 
+#==================================AJOUT CATEGORIE============================================
+
 def ajout_cat():
 
     nom_cat = input("Entrez une categorie:")
@@ -35,13 +38,24 @@ def ajout_cat():
     cursor.execute(query, (nom_cat,))
     connection.commit()
 
+#==================================MISE A JOUR QUANTITE PRODUIT===================================
 
 def update_quantite():
     afficher_produits()
     
-    id_pro = int(input("Entrez l'id du produit:")).strip()
+    id_pro = input("Entrez l'id du produit:")
+    if not id_pro.isdigit():
+        print("Erreur : id doit être un nombre.")
+        return
 
-    quantite = int(input("Entrez la quantite du produit:"))
+    id_pro = int(id_pro)
+
+    quantite = input("Entrez la quantite du produit:")
+    if not quantite.isdigit():
+        print("Erreur : la quantité doit être un nombre.")
+        return
+
+    quantite = int(quantite)
    
     cursor = connection.cursor()
     
@@ -57,11 +71,26 @@ def update_quantite():
     connection.commit()
     print("Ajouter avec succes")
 
+#===================================AJOUT MOUVEMENT=============================================
 
 def ajouter_mouvement():
-    id_produit = (input("Entrer id produit : "))
-    quantite = int(input("Entrer la quantite : "))
-    type_mouvement = input("Type (ENTREE/SORTIE) : ")
+
+    id_produit = input("Entrer id produit : ").strip()
+    if not id_produit.isdigit():
+        print("Erreur : id invalide")
+        return
+    id_produit = int(id_produit)
+
+    quantite = input("Entrer la quantite : ").strip()
+    if not quantite.isdigit():
+        print("Erreur : quantité invalide")
+        return
+    quantite = int(quantite)
+
+    type_mouvement = input("Type (ENTREE/SORTIE) : ").strip().upper()
+    if type_mouvement not in ["ENTREE", "SORTIE"]:
+        print("Erreur : type invalide")
+        return
 
     cursor = connection.cursor()
 
@@ -70,56 +99,71 @@ def ajouter_mouvement():
     connection.commit()
     print("Mouvement mis à jour avec succès !")
 
+#=================================AFFICHER MOUVEMENT============================================
+
 def afficher_mouvement():
     cursor = connection.cursor()
     query = "select * from mouvement"
     cursor.execute(query)
     for row in cursor.fetchall():
-        print(row)
+        print(f"id_mouv: {row[0]}| id_produit: {row[1]}| quantite: {row[2]}| type_mouvement: {row[3]}| date_mouvement: {row[4]}")
 
+#=============================AFFICHER CATEGORIE==============================================
 
 def afficher_cat():
     cursor = connection.cursor()
     query = "select * from categories"
     cursor.execute(query)
     for row in cursor.fetchall():
-        print(row)
+        print(f"id_cat: {row[0]}| nom_cat: {row[1]}")
+
+#==========================AJOUT CATEGORIE================================================
 
 def ajout_produits():
+    cursor = connection.cursor()
     nom_pro = input("Entrez le nom du produit:").strip()
-    if not nom_pro.isalpha():
-        print("Erreur de saisie")
+    if len(nom_pro) < 2:
+        print("Nom invalide")
         return
+
     prix = input("Entrez le prix:")
-    if not prix.isdigit():
-        print("Erreur de saisie")
+    try:
+        prix = float(prix)
+    except ValueError:
+        print("Le prix doit être un nombre.")
         return
+
     
     etat = input("Entrez l'etat du produit:").strip()
     if not etat.isalpha():
         print("Erreur de saisie")
         return
+    
     id_cat = input("Entrez id categorie:")
-    if not id_cat.isdigit():
-        print("Erreur de saisie")
+    cursor.execute("SELECT id_cat FROM categories WHERE id_cat = %s", (id_cat,))
+    if not cursor.fetchone():
+        print("Categorie inexistante")
         return
-    quantite = input("Entrez id categorie:")
+
+    quantite = input("Entrez quantite produit:")
     if not quantite.isdigit():
         print("Erreur de saisie")
         return   
-    cursor = connection.cursor()
-    
     
     query = "insert into produits (nom_pro, prix, etat, id_cat, quantite) values (%s, %s, %s, %s, %s)"
     cursor.execute(query, (nom_pro, prix, etat, id_cat, quantite))
     connection.commit()
+
+#============================AFFICHER PRODUITS================================================
 
 def afficher_produits():
     cursor = connection.cursor()
     query = "select * from produits"
     cursor.execute(query)
     for row in cursor.fetchall():
-        print(row)
+        print(f"id_produit: {row[0]}| nom_pro: {row[1]}| prix: {row[2]}| Etat: {row[3]}| id_categorie: {row[4]}| quantite: {row[5]}")
+
+#=================================AFFICHER LES PRODUITS PAR CATEGORIE========================================
 
 def afficher_pro_nom_cat():
     cursor = connection.cursor()
@@ -128,6 +172,7 @@ def afficher_pro_nom_cat():
     for row in cursor.fetchall():
         print(f"Nom categorie: {row[0]} | nom produits : {row[1]}")
 
+#==============================ATOCK FAIBLE=================================================
 
 def stock_faible():
     cursor = connection.cursor()
@@ -136,7 +181,7 @@ def stock_faible():
     for row in cursor.fetchall():
         print(f"id_produit :{row[0]} stock : {row[1]}")
     
-
+#==============================CHOIX MENU=========================================================
 
 def choix():
     while True:
@@ -163,3 +208,5 @@ def choix():
         else:
             print("erreur")
 choix()
+
+connection.close()
